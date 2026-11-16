@@ -1,0 +1,59 @@
+/* Planta arquitetônica conceitual original 4TECH. Não representa um imóvel real. */
+.architecture-plan.blueprint { background:radial-gradient(ellipse at 45% 35%,#26322a44,transparent 65%),#141c19; min-width:0; }
+.architecture-plan .blueprint-title { gap:18px; font-size:8px; line-height:1.6; }
+.architecture-plan #mode-label { text-align:right; }
+.plan-scroll { overflow-x:auto; max-width:100%; scrollbar-width:thin; scrollbar-color:#44554c transparent; }
+.plan-canvas { position:relative; width:100%; min-width:440px; aspect-ratio:760/570; margin:20px 0 14px; }
+.architecture-drawing { display:block; width:100%; height:100%; }
+.site-outline { fill:none; stroke:#3b4a40; stroke-width:.7; stroke-dasharray:3 5; }
+.architectural-wall { fill:none; stroke:#bac6b4; stroke-width:7; stroke-linecap:square; stroke-linejoin:miter; }
+.window-line { fill:none; stroke:#83b8b8; stroke-width:1.5; }
+.door-leaf { fill:none; stroke:#9ea98f; stroke-width:2; }
+.door-swing { fill:none; stroke:#586d5c; stroke-width:1; stroke-dasharray:2 2; }
+.plan-furnishings { fill:#536554; }
+.plan-furnishings > rect,.plan-furnishings > path,.plan-furnishings > circle { stroke:#8b9a7f; stroke-width:1; }
+.plan-furnishings .furniture-detail { fill:none; stroke:#a0ad8e; stroke-width:.8; }
+.plan-furnishings .tv-screen { fill:none; stroke:#bdd8d1; stroke-width:2.5; }
+.plan-plant circle { fill:#3c634b; stroke:#71936b; stroke-width:1; }
+.plan-plant path { fill:none; stroke:#a3bd85; stroke-width:1.5; }
+.cinema-screen { fill:#c8bded; }
+.cinema-chairs rect { fill:#465148; stroke:#7c8b77; stroke-width:1; }
+.cinema-chairs path { fill:none; stroke:#a2ac97; stroke-width:1; }
+.room-glow { transition:opacity .35s; }
+.hall-label { fill:#84968b; font:7px var(--mono); letter-spacing:1px; }
+.outer-dimension { fill:none; stroke:#394f42; stroke-width:1; }
+.dimension-copy { fill:#748a7e; font:7px var(--mono); letter-spacing:1px; }
+.plan-room-select { position:absolute; z-index:1; display:block; background:transparent; padding:0; border:1px solid transparent; border-radius:2px; text-align:left; color:#c8d9cc; }
+.plan-room-select > span { position:absolute; top:11px; left:12px; font:400 clamp(11px,1vw,14px) var(--sans); letter-spacing:.015em; }
+.plan-room-select[aria-pressed="true"] { border-color:#73efce69; box-shadow:inset 0 0 18px #73efce07; }
+.plan-room-select:hover { background:#d3ffe906; border-color:#73efce36; }
+.plan-room-select[aria-pressed="true"] > span { color:#a4f2d9; }
+.plan-devices { position:absolute; z-index:2; display:flex; gap:6px; padding:3px; border:1px solid #9ac2ad19; border-radius:9px; background:#122019e8; box-shadow:0 2px 8px #00000030; }
+.plan-device { display:grid; place-items:center; width:29px; height:29px; padding:0; border:1px solid #ffffff15; border-radius:7px; color:#63796c; background:#ffffff03; transition:color .15s,background .15s,box-shadow .15s; }
+.plan-device .icon { width:17px; height:17px; stroke-width:1.5; }
+.plan-device[data-device="light"][aria-checked="true"] { color:#ffe0a0; background:#d4ad5b1b; border-color:#e5c78c50; box-shadow:0 0 9px #d4ad5b18; }
+.plan-device[data-device="climate"][aria-checked="true"] { color:#8bcdec; background:#81bddd18; border-color:#81bddd40; }
+.plan-device[data-device="audio"][aria-checked="true"] { color:#83f0ce; background:#73efce19; border-color:#73efce50; }
+.plan-device[data-device="audio"][aria-checked="true"] .icon { animation:audio-indicator 1.6s ease-in-out infinite; }
+.plan-device:hover { border-color:#d6e6d47a; }
+.plan-device:focus-visible,.plan-room-select:focus-visible { outline:2px solid #c1ffe9; outline-offset:3px; }
+@keyframes audio-indicator { 50% { opacity:.6; } }
+.plan-legend { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 0 17px; font-size:9px; color:#9dafa1; }
+.plan-legend > span { display:flex; align-items:center; gap:5px; }
+.plan-legend i { width:5px; height:5px; border-radius:50%; }
+.legend-light { background:#ffe0a0; }.legend-climate { background:#8bcdec; }.legend-audio { background:#83f0ce; }
+.plan-legend > p { margin-left:auto; font-size:9px; color:#8e9f95; }
+.architecture-plan #telemetry-room-label { color:#91a89a; font:400 8px/1.6 var(--mono); margin-top:auto; margin-bottom:12px; }
+.architecture-plan .telemetry { margin-top:0; padding-top:18px; gap:20px; }
+.architecture-plan .telemetry b { font-size:28px; }
+@media (max-width:650px) {
+  .architecture-plan.blueprint { padding:23px 18px; }
+  .architecture-plan .blueprint-title { font-size:7px; }
+  .plan-legend > p { width:100%; margin-left:0; }
+  .plan-canvas { margin-block:15px; }
+  .plan-room-select > span { font-size:11px; top:9px; left:10px; }
+  .plan-device { width:27px; height:27px; }
+  .plan-devices { gap:4px; }
+  .architecture-plan .telemetry b { font-size:25px; }
+}
+@media (prefers-reduced-motion:reduce) { .plan-device .icon { animation:none!important; }.room-glow { transition:none; } }

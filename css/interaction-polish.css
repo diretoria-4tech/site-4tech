@@ -1,0 +1,48 @@
+/* Refinamento pontual do módulo V6 aprovado. */
+.plan-room-select {
+  transition:border-color 320ms ease,background-color 320ms ease,box-shadow 320ms ease,color 240ms ease;
+}
+.plan-room-select > span { transition:color 240ms ease,transform 320ms ease; }
+.plan-room-select[aria-pressed="true"] > span { transform:translateY(-1px); }
+.room-glow { transition:opacity 380ms ease; }
+.home-wallpaper .room-wallpaper-incoming { position:absolute; inset:0; opacity:0; }
+.home-control .home-widget { background:#141329e8; border-color:#c3b1ff18; box-shadow:0 6px 22px #07061126; }
+.home-control .preset-buttons button { background:#1b182fd6; border-color:#bcaadd24; }
+.home-control .preset-buttons button:hover { background:#27213cdd; border-color:#b6a1f77a; }
+.home-control .preset-buttons button[aria-pressed="true"] { background:#3c337ac7; border-color:#bba5ed80; }
+.home-control .home-categories button { background:#101426bc; }
+.home-control .home-categories button[aria-pressed="true"] { background:#51416c88; }
+/* A cena Apagar todas mantém a indicação dourada original. */
+.home-control .preset-buttons button[data-preset="apagar"] { background:#30293885; border-color:#bea16640; }
+.home-control .preset-buttons button[data-preset="apagar"][aria-pressed="true"] { background:#554430c9; border-color:#d7b77580; }
+.control-console .console-body > * { min-width:0; }
+@media (max-width:1000px) {
+  .control-console .console-body { grid-template-columns:minmax(0,1fr); }
+  .architecture-plan .plan-scroll { width:100%; max-width:760px; margin-inline:auto; }
+  .architecture-plan .plan-canvas { min-width:0; }
+}
+@media (min-width:651px) and (max-width:1000px) {
+  .home-control[data-category="overview"] .home-widgets { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .home-control[data-category="overview"] .audio-widget { grid-column:1/-1; }
+}
+@media (max-width:650px) {
+  .plan-devices { gap:2px; padding:2px; }
+  .plan-device { width:clamp(24px,6.5vw,29px); height:clamp(24px,6.5vw,29px); }
+  .plan-device .icon { width:16px; height:16px; }
+  .plan-room-select > span { font-size:10px; top:7px; left:8px; }
+  .home-control .home-categories button { min-height:44px; }
+  .home-control .mini-power { width:40px; height:40px; }
+  .home-control .thermostat > button { min-width:40px; min-height:40px; }
+  .home-control .session-play { width:40px; height:40px; }
+  .home-control .track-skip { width:30px; min-height:40px; }
+  .home-control .audio-session { gap:8px; }
+}
+@media (max-width:340px) {
+  .architecture-plan .plan-canvas { min-width:280px; }
+  .home-control .audio-session { flex-wrap:wrap; }
+  .home-control .audio-transport { margin-left:auto; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .plan-room-select,.plan-room-select > span,.room-glow { transition:none!important; }
+  .plan-room-select[aria-pressed="true"] > span { transform:none; }
+}
