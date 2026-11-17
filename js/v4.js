@@ -1,7 +1,8 @@
-/* 4TECH V4 — nova composição, sem backend ou rastreamento. */
+/* 4TECH V4 — navegação, vídeos, galeria e formulário. */
 (() => {
   'use strict';
   const byId = (id) => document.getElementById(id);
+  const trackEvent = (name, props) => { if (window.fourtechTrack) window.fourtechTrack(name, props); };
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const header = byId('topo');
   const menu = document.querySelector('.menu-button');
@@ -40,7 +41,7 @@
     if (focus) worldTabs[index].focus();
   }
   worldTabs.forEach((tab, index) => {
-    tab.addEventListener('click', () => showWorld(index));
+    tab.addEventListener('click', () => { showWorld(index); trackEvent('solution_tab', { tab: tab.querySelector('span').textContent }); });
     tab.addEventListener('keydown', (event) => {
       let next = index;
       if (event.key === 'ArrowRight') next = (index + 1) % worldTabs.length;
@@ -56,15 +57,15 @@
   const projectData = {
     alphaville: {
       title: 'Alphaville 2', category: 'PALMAS / TO', image: 'img/poster-obra-alphaville.webp',
-      description: 'Um projeto residencial em que áudio, iluminação, climatização e cinema compartilham a mesma lógica de controle. A integração permite pensar a experiência do espaço como um conjunto.'
+      description: 'Residência em Palmas com som, iluminação, ar-condicionado e cinema no mesmo sistema. Uma cena ajusta vários ambientes de uma vez, pelo celular ou pelo teclado na parede.'
     },
     bahia: {
       title: 'Condomínio familiar', category: 'BAHIA / INTEGRAÇÃO RESIDENCIAL', image: 'img/casa-bahia.webp',
-      description: 'Cinco casas, escritório e áreas de lazer dentro de um mesmo projeto de integração. A proposta combina a autonomia de cada residência com as possibilidades de um sistema conectado.'
+      description: 'Cinco casas, um escritório e áreas de lazer no mesmo projeto. Cada casa controla o que é seu, e as áreas comuns funcionam juntas.'
     },
     brastemp: {
       title: 'Casa Brastemp', category: 'ARQUITETURA / SONORIZAÇÃO', image: 'img/casa-brastemp-teto.webp',
-      description: 'A sonorização participa do projeto arquitetônico desde a escolha dos equipamentos até a distribuição no ambiente. Um trabalho em que escutar bem e preservar o desenho do espaço caminham juntos.'
+      description: 'Som planejado junto com a arquitetura: caixas embutidas no forro e distribuídas para o som chegar por igual em todo o ambiente, sem aparecer no projeto.'
     }
   };
 
@@ -84,6 +85,7 @@
       byId('dialog-image').src = project.image;
       byId('dialog-image').alt = project.title;
       projectDialog.showModal();
+      trackEvent('project_open', { project: button.dataset.project });
       syncDialogLock();
     });
   });
@@ -114,62 +116,67 @@
       byId('gallery-image').src = image.getAttribute('src');
       byId('gallery-image').alt = image.alt;
       galleryDialog.showModal();
+      trackEvent('gallery_open', { photo: button.querySelector('b').textContent });
       syncDialogLock();
     });
   });
   byId('gallery-close').addEventListener('click', () => galleryDialog.close());
 
+  // Vídeo de fundo: sempre tocando enquanto o topo estiver na tela.
   const film = byId('hero-film');
-  const filmControl = byId('film-control');
   const hero = byId('inicio');
-  function updateFilmControl(playing) {
-    filmControl.setAttribute('aria-pressed', String(playing));
-    filmControl.setAttribute('aria-label', playing ? 'Pausar vídeo de fundo' : 'Reproduzir vídeo de fundo');
-    filmControl.querySelector('span').textContent = playing ? 'Ⅱ' : '▷';
-    filmControl.querySelector('b').textContent = playing ? 'Pausar vídeo' : 'Reproduzir vídeo';
-  }
-  function pauseFilm() {
-    film.pause();
-    updateFilmControl(false);
-  }
+  const filmAllowed = !reducedMotion.matches && !(navigator.connection && navigator.connection.saveData);
+  let heroVisible = true;
   async function playFilm() {
+    if (!filmAllowed || !heroVisible || document.hidden || document.body.classList.contains('dialog-open')) return;
     if (!film.getAttribute('src')) film.src = film.dataset.src;
     film.muted = true;
-    try {
-      await film.play();
-      hero.classList.add('film-playing');
-      updateFilmControl(true);
-    } catch (_) {
-      updateFilmControl(false);
-    }
+    try { await film.play(); hero.classList.add('film-playing'); } catch (_) {}
   }
-  filmControl.addEventListener('click', () => film.paused ? playFilm() : pauseFilm());
-  film.addEventListener('pause', () => updateFilmControl(false));
-  film.addEventListener('playing', () => { hero.classList.add('film-playing'); updateFilmControl(true); });
-  film.addEventListener('error', () => { hero.classList.remove('film-playing'); updateFilmControl(false); });
-  if (!reducedMotion.matches && !(navigator.connection && navigator.connection.saveData)) playFilm();
+  const pauseFilm = () => film.pause();
+  film.addEventListener('playing', () => hero.classList.add('film-playing'));
+  film.addEventListener('error', () => hero.classList.remove('film-playing'));
+  playFilm();
   if ('IntersectionObserver' in window) {
-    const filmObserver = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) pauseFilm();
-    }, { threshold: 0.05 });
-    filmObserver.observe(hero);
+    new IntersectionObserver(([entry]) => {
+      heroVisible = entry.isIntersecting;
+      if (heroVisible) playFilm(); else pauseFilm();
+    }, { threshold: 0.05 }).observe(hero);
   }
-  document.addEventListener('visibilitychange', () => { if (document.hidden) pauseFilm(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) pauseFilm(); else playFilm(); });
 
+  // Vídeo do showroom: abre em tela cheia, com som quando o arquivo tiver áudio.
+  const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+  function enterFullscreen(video) {
+    try {
+      if (video.requestFullscreen) return video.requestFullscreen().catch(() => {});
+      if (video.webkitRequestFullscreen) return video.webkitRequestFullscreen();
+      if (video.webkitEnterFullscreen) return video.webkitEnterFullscreen();
+    } catch (_) {}
+  }
   document.querySelectorAll('[data-open-video]').forEach((button) => {
     button.addEventListener('click', () => {
       pauseFilm();
       videoDialog.showModal();
       syncDialogLock();
-      showroomVideo.muted = true;
+      showroomVideo.muted = false;
+      showroomVideo.currentTime = 0;
       const playback = showroomVideo.play();
-      if (playback) playback.catch(() => {});
+      if (playback) playback.catch(() => { showroomVideo.muted = true; showroomVideo.play().catch(() => {}); });
+      enterFullscreen(showroomVideo);
+      trackEvent('video_open', { from: button.closest('section') ? button.closest('section').id : '' });
     });
   });
+  const leaveFullscreen = () => { if (!fullscreenElement() && videoDialog.open) videoDialog.close(); };
+  document.addEventListener('fullscreenchange', leaveFullscreen);
+  document.addEventListener('webkitfullscreenchange', leaveFullscreen);
+  showroomVideo.addEventListener('webkitendfullscreen', () => { if (videoDialog.open) videoDialog.close(); });
   document.querySelector('.video-close').addEventListener('click', () => videoDialog.close());
   videoDialog.addEventListener('close', () => {
     showroomVideo.pause();
     if (showroomVideo.readyState > 0) showroomVideo.currentTime = 0;
+    if (fullscreenElement() && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+    playFilm();
   });
   dialogs.forEach((dialog) => {
     dialog.addEventListener('close', syncDialogLock);
@@ -187,7 +194,8 @@
     if (!form.reportValidity()) return;
     const type = byId('project-type').value;
     const stage = byId('project-stage').value;
-    const message = `Olá, 4TECH! Quero conversar sobre a integração de tecnologia para ${type}. O projeto está na fase de ${stage}. Podemos falar sobre as possibilidades?`;
+    const message = `Olá, 4TECH! É para ${type}, que está ${stage}. Quero conversar sobre automação e som.`;
+    trackEvent('whatsapp_form_submit', { tipo: type, etapa: stage });
     const url = new URL('https://wa.me/5563999393959');
     url.searchParams.set('text', message);
     window.open(url.toString(), '_blank', 'noopener,noreferrer');

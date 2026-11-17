@@ -1,10 +1,13 @@
-/* 4TECH: planta V6 restaurada; luz e clima simulados; playlist real reproduzida localmente no navegador. */
+/* 4TECH Control Lab: ambiente em destaque, minimapa e efeitos. Luz e clima simulados; playlist real no navegador. */
 (() => {
   'use strict';
   const byId = id => document.getElementById(id);
   const panel = byId('home-control');
   if (!panel) return;
-  const roomSelect = byId('room-select');
+  const stage = byId('lab-stage');
+  const stageRoom = byId('stage-room');
+  const toast = byId('scene-toast');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const lightRange = byId('light-range');
   const temperatureRange = byId('temperature-range');
   const volumeRange = byId('volume-range');
@@ -26,7 +29,7 @@
   const presets = {
     foco: { light: 90, temperature: 23, climate: true, volume: 25, play: false, mode: 'FOCO' },
     receber: { light: 55, temperature: 22, climate: true, volume: 40, play: true, mode: 'RECEBER' },
-    imersao: { light: 10, temperature: 21, climate: true, volume: 55, play: true, mode: 'IMERSÃO' }
+    imersao: { light: 10, temperature: 21, climate: true, volume: 55, play: true, mode: 'FILME' }
   };
   const defaults = () => Object.fromEntries(Object.entries(rooms).map(([key, room]) => [key, { light: room.light, temperature: room.temperature, volume: room.volume, lastLight: room.light, climate: true, audio: false, track: 0, position: 0, mode: 'PERSONALIZADO' }]));
   let states = defaults();
@@ -39,13 +42,10 @@
   let volumeSupported = true;
   const current = () => states[selectedRoom];
   const presetButtons = Array.from(panel.querySelectorAll('[data-preset]'));
-  const categories = Array.from(panel.querySelectorAll('.home-categories [data-category]'));
-  const widgets = Array.from(panel.querySelectorAll('[data-widget]'));
   const roomButtons = Array.from(document.querySelectorAll('[data-room-select]'));
-  const deviceButtons = Array.from(document.querySelectorAll('.plan-device'));
   const glows = Array.from(document.querySelectorAll('[data-glow]'));
-  const shades = Array.from(document.querySelectorAll('[data-shade]'));
   const announce = message => { byId('lab-status').textContent = message; };
+  const track = (name, props) => { if (window.fourtechTrack) window.fourtechTrack(name, props); };
   const fillRange = input => {
     const minimum = Number(input.min), maximum = Number(input.max);
     const percent = maximum > minimum ? (Number(input.value) - minimum) / (maximum - minimum) * 100 : 0;
@@ -75,8 +75,8 @@
     byId('light-value').value = `${state.light}%`;
     byId('temperature-value').value = state.climate ? `${state.temperature}°C` : '—';
     byId('volume-value').value = `${state.volume}%`;
-    byId('light-state').textContent = state.light > 0 ? 'Luzes acesas' : 'Luzes apagadas';
-    byId('climate-state').textContent = state.climate ? 'Ar ligado' : 'Ar desligado';
+    byId('light-state').textContent = state.light > 0 ? 'Acesa' : 'Apagada';
+    byId('climate-state').textContent = state.climate ? 'Ligado' : 'Desligado';
     byId('light-toggle').setAttribute('aria-checked', String(state.light > 0));
     byId('climate-toggle').setAttribute('aria-checked', String(state.climate));
     byId('temperature-down').disabled = !state.climate || state.temperature <= 18;
@@ -88,7 +88,7 @@
     byId('audio-track-title').textContent = playlist[state.track].title;
     byId('audio-session-room').textContent = `${room.name} · ${loading ? 'carregando…' : playing ? state.volume === 0 ? 'tocando · volume zero' : 'em reprodução' : 'pausado'}`;
     playButton.setAttribute('aria-pressed', String(playing));
-    playButton.setAttribute('aria-label', playing || loading ? 'Pausar playlist' : 'Reproduzir playlist');
+    playButton.setAttribute('aria-label', playing || loading ? 'Pausar música' : 'Tocar música');
     playButton.setAttribute('aria-busy', String(loading));
     byId('audio-play-icon').querySelector('use').setAttribute('href', playing || loading ? '#i-pause' : '#i-play');
     panel.querySelector('.audio-widget').classList.toggle('is-muted', !playing);
@@ -96,16 +96,21 @@
     byId('telemetry-temperature').textContent = state.climate ? `${state.temperature}°C` : '—';
     byId('telemetry-audio').textContent = playing ? state.volume === 0 ? 'Mudo' : 'Tocando' : 'Pausado';
     byId('mode-label').textContent = `${room.name.toUpperCase()} / ${state.mode}`;
-    byId('telemetry-room-label').textContent = `AMBIENTE SELECIONADO / ${room.name.toUpperCase()}`;
-    roomSelect.value = selectedRoom;
-    roomButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.roomSelect === selectedRoom)));
-    glows.forEach(glow => { glow.style.opacity = String(states[glow.dataset.glow].light / 100); });
-    shades.forEach(shade => { shade.style.opacity = String(.24 * (1 - states[shade.dataset.shade].light / 100)); });
-    deviceButtons.forEach(button => {
-      const key = button.dataset.room, device = button.dataset.device;
-      const enabled = device === 'light' ? states[key].light > 0 : device === 'climate' ? states[key].climate : isPlaying(key);
-      button.setAttribute('aria-checked', String(enabled));
+    stageRoom.textContent = room.name;
+    stage.dataset.room = selectedRoom;
+    stage.style.setProperty('--light', String(state.light / 100));
+    stage.style.setProperty('--cool', String(Math.max(0, Math.min(1, (28 - state.temperature) / 10))));
+    stage.style.setProperty('--vol', String(state.volume / 100));
+    stage.dataset.climate = state.climate ? 'on' : 'off';
+    stage.dataset.audio = playing ? 'on' : 'off';
+    roomButtons.forEach(button => {
+      const key = button.dataset.roomSelect;
+      button.setAttribute('aria-pressed', String(key === selectedRoom));
+      button.classList.toggle('has-light', states[key].light > 0);
+      button.classList.toggle('has-climate', states[key].climate);
+      button.classList.toggle('has-audio', isPlaying(key));
     });
+    glows.forEach(glow => { glow.style.opacity = String(states[glow.dataset.glow].light / 100); });
     const allOff = Object.values(states).every(item => item.light === 0);
     presetButtons.forEach(button => {
       const pressed = button.dataset.preset === 'apagar' ? allOff : presets[button.dataset.preset].mode === state.mode;
@@ -153,65 +158,72 @@
     const request = ++playRequest;
     loading = true;
     loadTrack();
-    render(`Preparando ${playlist[current().track].title} em ${rooms[key].name}…`);
+    render(`Carregando ${playlist[current().track].title}…`);
     try {
       await media.play();
       if (request !== playRequest || key !== selectedRoom) return;
       loading = false;
       states[key].audio = true;
       render(`Tocando ${playlist[current().track].title} em ${rooms[key].name}.`);
+      track('lab_audio_play', { room: key, track: playlist[current().track].title });
     } catch (error) {
       if (request !== playRequest || key !== selectedRoom) return;
       loading = false;
       states[key].audio = false;
-      const message = error.name === 'NotAllowedError' ? 'O navegador bloqueou o áudio. Toque em Play para autorizar a reprodução.' : 'Não foi possível reproduzir esta faixa. Confira os arquivos de áudio ou tente outra faixa.';
+      const message = error.name === 'NotAllowedError' ? 'O navegador bloqueou o som. Toque no play para liberar.' : 'Esta faixa não carregou. Tente outra.';
       render(message);
     }
   }
   function toggleAudio() {
     current().mode = 'PERSONALIZADO';
-    if (isPlaying(selectedRoom) || loading) pauseAudio(`Playlist pausada em ${rooms[selectedRoom].name}.`);
+    if (isPlaying(selectedRoom) || loading) pauseAudio(`Música pausada em ${rooms[selectedRoom].name}.`);
     else startAudio();
-  }
-  function centerPlanOnRoom(key) {
-    const rail = byId('mezz-map-rail'), canvas = byId('plan-canvas');
-    if (!rail || !canvas) return;
-    const target = canvas.clientWidth * rooms[key].focus - rail.clientWidth / 2;
-    rail.scrollTo({ left: Math.max(0, Math.min(canvas.clientWidth - rail.clientWidth, target)), behavior: 'auto' });
   }
   let wallpaperSequence = 0;
   function transitionWallpaper(src) {
-    const wallpaper = byId('room-wallpaper'), host = wallpaper.parentElement;
+    const host = byId('stage-photos');
     const sequence = ++wallpaperSequence;
-    wallpaper.getAnimations().forEach(animation => animation.cancel());
-    host.querySelectorAll('.room-wallpaper-incoming').forEach(image => {
-      image.getAnimations().forEach(animation => animation.cancel());
-      image.remove();
-    });
     const incoming = document.createElement('img');
-    incoming.className = 'room-wallpaper-incoming';
+    incoming.className = 'stage-photo';
     incoming.alt = '';
-    incoming.onload = () => {
+    incoming.decoding = 'async';
+    const swap = () => {
       if (sequence !== wallpaperSequence) { incoming.remove(); return; }
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !wallpaper.animate) {
-        wallpaper.src = src;
-        incoming.remove();
-        return;
-      }
-      const timing = { duration: 320, easing: 'ease-in-out', fill: 'forwards' };
-      const outgoing = wallpaper.animate([{ opacity: .6 }, { opacity: 0 }], timing);
-      const arriving = incoming.animate([{ opacity: 0 }, { opacity: .6 }], timing);
-      arriving.onfinish = () => {
-        if (sequence !== wallpaperSequence) return;
-        wallpaper.src = src;
-        outgoing.cancel();
-        arriving.cancel();
-        incoming.remove();
-      };
+      const old = Array.from(host.querySelectorAll('.stage-photo')).filter(image => image !== incoming);
+      if (reduced.matches) { old.forEach(image => image.remove()); incoming.id = 'room-wallpaper'; return; }
+      incoming.classList.add('is-entering');
+      incoming.addEventListener('animationend', () => {
+        incoming.classList.remove('is-entering');
+        if (sequence === wallpaperSequence) old.forEach(image => image.remove());
+      }, { once: true });
+      old.forEach(image => image.removeAttribute('id'));
+      incoming.id = 'room-wallpaper';
     };
+    incoming.onload = swap;
     incoming.onerror = () => incoming.remove();
     incoming.src = src;
     host.appendChild(incoming);
+    if (!reduced.matches) {
+      stageRoom.classList.remove('is-changing');
+      void stageRoom.offsetWidth;
+      stageRoom.classList.add('is-changing');
+    }
+  }
+  function showToast(text) {
+    if (!toast || reduced.matches) return;
+    toast.textContent = text;
+    toast.classList.remove('is-visible');
+    void toast.offsetWidth;
+    toast.classList.add('is-visible');
+  }
+  let burstTimer = 0;
+  function lightBurst() {
+    if (reduced.matches) return;
+    stage.classList.remove('light-burst');
+    void stage.offsetWidth;
+    stage.classList.add('light-burst');
+    clearTimeout(burstTimer);
+    burstTimer = setTimeout(() => stage.classList.remove('light-burst'), 950);
   }
   function selectRoom(key, announceChange = true) {
     if (!rooms[key]) return;
@@ -219,22 +231,24 @@
       pauseAudio();
       selectedRoom = key;
       transitionWallpaper(rooms[key].image);
-      centerPlanOnRoom(key);
       loadTrack();
     }
-    render(announceChange ? `${rooms[key].name} selecionado. Toque nos símbolos para controlar este ambiente.` : undefined);
+    render(announceChange ? `${rooms[key].name}: ajuste a luz, o ar e o som.` : undefined);
+    track('lab_room_select', { room: key });
   }
   function toggleLight(key = selectedRoom) {
     const state = states[key];
     if (state.light > 0) { state.lastLight = state.light; state.light = 0; }
-    else state.light = state.lastLight || rooms[key].light;
+    else { state.light = state.lastLight || rooms[key].light; lightBurst(); }
     state.mode = 'PERSONALIZADO';
-    render(`Luzes de ${rooms[key].name} ${state.light > 0 ? 'acesas' : 'apagadas'} na simulação.`);
+    render(`Luz ${state.light > 0 ? 'acesa' : 'apagada'} em ${rooms[key].name}.`);
+    track('lab_light_toggle', { room: key, on: state.light > 0 });
   }
   function toggleClimate(key = selectedRoom) {
     states[key].climate = !states[key].climate;
     states[key].mode = 'PERSONALIZADO';
-    render(`Ar de ${rooms[key].name} ${states[key].climate ? 'ligado' : 'desligado'} na simulação.`);
+    render(`Ar ${states[key].climate ? 'ligado' : 'desligado'} em ${rooms[key].name}.`);
+    track('lab_climate_toggle', { room: key, on: states[key].climate });
   }
   function chooseTrack(index) {
     if (!Number.isInteger(index) || !playlist[index]) return;
@@ -247,19 +261,17 @@
     if (wasPlaying) startAudio();
   }
 
-  roomSelect.addEventListener('change', () => selectRoom(roomSelect.value));
   roomButtons.forEach(button => button.addEventListener('click', () => selectRoom(button.dataset.roomSelect)));
-  deviceButtons.forEach(button => button.addEventListener('click', () => {
-    selectRoom(button.dataset.room, false);
-    if (button.dataset.device === 'light') toggleLight();
-    else if (button.dataset.device === 'climate') toggleClimate();
-    else toggleAudio();
-  }));
+  let lightTrackTimer = 0;
   lightRange.addEventListener('input', () => {
+    const before = current().light;
     current().light = Number(lightRange.value);
+    if (before === 0 && current().light > 0) lightBurst();
+    clearTimeout(lightTrackTimer);
+    lightTrackTimer = setTimeout(() => track('lab_light_change', { room: selectedRoom, level: current().light }), 800);
     if (current().light > 0) current().lastLight = current().light;
     current().mode = 'PERSONALIZADO';
-    render(`Luz de ${rooms[selectedRoom].name}: ${current().light}%.`);
+    render(`Luz em ${current().light}%.`);
   });
   byId('light-toggle').addEventListener('click', () => toggleLight());
   byId('climate-toggle').addEventListener('click', () => toggleClimate());
@@ -267,7 +279,7 @@
     if (!current().climate) return;
     current().temperature = Math.min(28, Math.max(18, value));
     current().mode = 'PERSONALIZADO';
-    render(`Temperatura desejada de ${rooms[selectedRoom].name}: ${current().temperature}°C.`);
+    render(`Ar em ${current().temperature}°C.`);
   }
   temperatureRange.addEventListener('input', () => setTemperature(Number(temperatureRange.value)));
   byId('temperature-down').addEventListener('click', () => setTemperature(current().temperature - 1));
@@ -276,7 +288,7 @@
   volumeRange.addEventListener('input', () => {
     current().volume = Number(volumeRange.value);
     applyVolume();
-    render(`Volume da playlist: ${current().volume}%.`);
+    render(`Volume em ${current().volume}%.`);
   });
   trackSelect.addEventListener('change', () => chooseTrack(Number(trackSelect.value)));
   byId('track-next').addEventListener('click', () => chooseTrack((current().track + 1) % playlist.length));
@@ -294,31 +306,30 @@
       Object.values(states).forEach(state => {
         if (state.light > 0) state.lastLight = state.light;
         state.light = 0;
-        state.mode = 'APAGAR TODAS';
+        state.mode = 'APAGAR TUDO';
       });
-      render('Cena Apagar todas aplicada às quatro zonas do mezanino. Ar e música foram mantidos.');
+      render('Luz apagada nos quatro ambientes. O ar e a música continuam como estavam.');
+      showToast('Apagar tudo');
+      track('lab_scene', { scene: 'apagar', room: selectedRoom });
       return;
     }
     const preset = presets[button.dataset.preset];
+    if (current().light === 0 && preset.light > 0) lightBurst();
     Object.assign(current(), { light: preset.light, lastLight: preset.light, temperature: preset.temperature, climate: preset.climate, volume: preset.volume, mode: preset.mode });
     applyVolume();
     if (preset.play) startAudio();
     else pauseAudio();
-    render(`Cena ${preset.mode.toLowerCase()} aplicada a ${rooms[selectedRoom].name}.`);
-  }));
-  categories.forEach(button => button.addEventListener('click', () => {
-    const category = button.dataset.category;
-    panel.dataset.category = category;
-    categories.forEach(other => other.setAttribute('aria-pressed', String(other === button)));
-    widgets.forEach(widget => { widget.hidden = category !== 'overview' && widget.dataset.widget !== category; });
-    announce(`${button.textContent.trim()} de ${rooms[selectedRoom].name} selecionado.`);
+    const label = button.querySelector('span').textContent.trim();
+    render(`Cena ${label} em ${rooms[selectedRoom].name}.`);
+    showToast(`Cena ${label}`);
+    track('lab_scene', { scene: button.dataset.preset, room: selectedRoom });
   }));
   byId('lab-reset').addEventListener('click', () => {
     pauseAudio();
     states = defaults();
     loadedTrack = '';
     loadTrack();
-    render('Padrões das quatro zonas do mezanino restaurados. A playlist está pausada.');
+    render('Tudo voltou ao estado inicial. A música está pausada.');
   });
 
   media.addEventListener('loadedmetadata', () => {
@@ -349,9 +360,8 @@
   media.addEventListener('error', () => {
     loading = false;
     if (states[mediaRoom]) states[mediaRoom].audio = false;
-    render('A faixa não pôde ser carregada. Confira a pasta audio ou selecione outra faixa.');
+    render('Esta faixa não carregou. Tente outra.');
   });
   loadTrack();
-  render('Explore o mezanino. A playlist só começa quando você toca em Play ou em uma cena com som.');
-  centerPlanOnRoom(selectedRoom);
+  render('Escolha um ambiente no mapa e toque numa cena.');
 })();
