@@ -22,3 +22,25 @@ img.is-loaded { animation: sk-fade .45s ease-out both; }
   img.is-loaded { animation: none; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* Título do topo em uma linha só */
+.hero h1 { max-width: none; white-space: nowrap; }
+@media (max-width: 760px) { .hero h1 { font-size: calc((100vw - 40px) / 7.3); } }
+
+/* Contato: textos maiores e botão do WhatsApp */
+.contact-description { font-size: 21px; line-height: 1.6; margin-top: 30px; }
+.contact-form { margin-top: 54px; gap: 22px; }
+.form-field label { font-size: 16px; margin-bottom: 12px; }
+.form-field select { font-size: 18px; min-height: 66px; padding: 18px 18px; }
+.contact-form .button { min-height: 66px; font-size: 18px; gap: 12px; }
+.form-note { font-size: 14px; margin-top: 6px; }
+.button-whatsapp { color: #062a1a; background: #25d366; font-weight: 700; }
+.button-whatsapp:hover { background: #3be07a; }
+.button-whatsapp .icon-whatsapp { width: 26px; height: 26px; fill: none; flex-shrink: 0; }
+@media (max-width: 760px) {
+  .contact-description { font-size: 17px; }
+  .form-field label { font-size: 14px; }
+  .form-field select { font-size: 16px; min-height: 58px; }
+  .contact-form .button { min-height: 60px; font-size: 17px; }
+  .form-note { font-size: 12px; }
+}
