@@ -109,24 +109,24 @@
 
 /* ---------- Minimapa ---------- */
 .minimap {
-  position: absolute; z-index: 3; top: 22px; left: 22px; width: 236px;
-  padding: 10px 10px 8px; border: 1px solid #ffffff1f; border-radius: 12px;
+  position: absolute; z-index: 3; top: 22px; left: 22px; width: 350px;
+  padding: 14px 14px 12px; border: 1px solid #ffffff1f; border-radius: 12px;
   background: #0b1210d9; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 10px 30px #0006;
 }
-.minimap-label { font: 400 7px/1 var(--mono); letter-spacing: .12em; color: #8fb3a4; margin-bottom: 8px; }
+.minimap-label { font: 400 9px/1 var(--mono); letter-spacing: .14em; color: #8fb3a4; margin-bottom: 11px; }
 .minimap-plan { position: relative; aspect-ratio: 642 / 474; }
 .minimap .architecture-drawing { width: 100%; height: 100%; display: block; }
 .minimap .hall-label, .minimap .dimension-copy, .minimap .outer-dimension, .minimap .site-outline, .minimap .door-swing, .minimap .window-line { display: none; }
 .minimap .architectural-wall { stroke-width: 5; }
 .minimap .room-glow { transition: opacity .6s ease; }
 .minimap .plan-room-select { border-radius: 3px; border: 1px solid transparent; }
-.minimap .plan-room-select > span { top: 5px; left: 6px; font: 500 10px/1 var(--sans); color: #d6e5da; text-shadow: 0 1px 3px #000; transform: none; }
+.minimap .plan-room-select > span { top: 8px; left: 9px; font: 500 14px/1 var(--sans); color: #d6e5da; text-shadow: 0 1px 3px #000; transform: none; }
 .minimap .plan-room-select[aria-pressed="true"] { border-color: #73efce; background: #73efce1f; box-shadow: 0 0 0 1px #73efce55, inset 0 0 22px #73efce22; }
 .minimap .plan-room-select[aria-pressed="true"] > span { color: #a8f5dc; }
 .minimap .plan-room-select:hover { background: #d3ffe914; border-color: #73efce66; }
-.room-dots { position: absolute; right: 5px; bottom: 5px; display: flex; gap: 3px; }
-.room-dots b { width: 5px; height: 5px; border-radius: 50%; background: #ffffff26; transition: background .3s, box-shadow .3s; }
+.room-dots { position: absolute; right: 7px; bottom: 7px; display: flex; gap: 4px; }
+.room-dots b { width: 7px; height: 7px; border-radius: 50%; background: #ffffff26; transition: background .3s, box-shadow .3s; }
 .plan-room-select.has-light .dot-light { background: #ffe0a0; box-shadow: 0 0 6px #ffd27a; }
 .plan-room-select.has-climate .dot-climate { background: #8bcdec; }
 .plan-room-select.has-audio .dot-audio { background: #83f0ce; animation: audio-indicator 1.4s ease-in-out infinite; }
@@ -199,7 +199,7 @@
 /* ---------- Telas médias ---------- */
 @media (max-width: 1100px) {
   .lab-stage { --panel-w: 350px; }
-  .minimap { width: 196px; }
+  .minimap { width: 280px; }
   .stage-hud .telemetry { gap: 18px; }
   .stage-hud .telemetry b { font-size: 22px; }
   .home-control .thermostat { gap: 4px; }
@@ -214,11 +214,11 @@
     position: sticky; top: 76px; z-index: 6; height: min(44svh, 380px); min-height: 270px;
     border-bottom: 1px solid #ffffff1a;
   }
-  .minimap { top: 12px; left: 12px; width: 148px; padding: 7px 7px 6px; border-radius: 10px; }
-  .minimap-label { font-size: 6px; margin-bottom: 5px; }
-  .minimap .plan-room-select > span { font-size: 8px; top: 3px; left: 4px; }
-  .room-dots { right: 3px; bottom: 3px; gap: 2px; }
-  .room-dots b { width: 4px; height: 4px; }
+  .minimap { top: 12px; left: 12px; width: 196px; padding: 8px 8px 7px; border-radius: 11px; }
+  .minimap-label { font-size: 7px; margin-bottom: 6px; }
+  .minimap .plan-room-select > span { font-size: 10px; top: 4px; left: 5px; }
+  .room-dots { right: 4px; bottom: 4px; gap: 3px; }
+  .room-dots b { width: 5px; height: 5px; }
   .stage-hud { left: 16px; right: 16px; bottom: 14px; }
   .stage-kicker { font-size: 7px; margin-bottom: 3px; }
   .stage-room { font-size: 40px; }
@@ -246,7 +246,7 @@
   .home-control .session-play { width: 40px; height: 40px; }
 }
 @media (max-width: 360px) {
-  .minimap { width: 128px; }
+  .minimap { width: 168px; }
   .stage-room { font-size: 34px; }
   .home-control .preset-buttons button { font-size: 9px; }
   .home-control .thermostat output { font-size: 21px; }
